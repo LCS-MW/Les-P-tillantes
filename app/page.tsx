@@ -1,65 +1,204 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { mediaList } from "../app/data/mediaList";
+
+gsap.registerPlugin(useGSAP);
+
+export default function DisplayBoard() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentImgRef = useRef<HTMLImageElement>(null);
+  const nextImgRef = useRef<HTMLImageElement>(null);
+
+  const currentLayerRef = useRef<HTMLDivElement>(null);
+  const nextLayerRef = useRef<HTMLDivElement>(null);
+  const logoPanelRef = useRef<HTMLDivElement>(null);
+  const logoImgRef = useRef<HTMLImageElement>(null);
+
+  const currentIndexRef = useRef(0);
+  const mediaDurationRef = useRef(10000);
+
+  useGSAP(
+    () => {
+      const savedTime = localStorage.getItem("customMediaTime");
+      if (savedTime) mediaDurationRef.current = parseInt(savedTime, 10);
+
+      let timeoutId: ReturnType<typeof setTimeout>;
+
+      gsap.set(currentLayerRef.current, { xPercent: 0 });
+      gsap.set(nextLayerRef.current, { xPercent: -100 });
+      gsap.set(logoPanelRef.current, { xPercent: -100 });
+      gsap.set(logoImgRef.current, {
+        rotation: 0,
+        rotationY: 0,
+        opacity: 0,
+        scale: 0.5,
+      });
+
+      const runCycle = () => {
+        const cur = currentIndexRef.current;
+        const next = (cur + 1) % mediaList.length;
+
+        if (nextImgRef.current) {
+          nextImgRef.current.src = mediaList[next].src;
+        }
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            if (currentImgRef.current && nextImgRef.current) {
+              currentImgRef.current.src = mediaList[next].src;
+            }
+
+            gsap.set(currentLayerRef.current, { xPercent: 0 });
+            gsap.set(nextLayerRef.current, { xPercent: -100 });
+            gsap.set(logoPanelRef.current, { xPercent: -100 });
+
+            gsap.set(logoImgRef.current, {
+              rotation: 0,
+              rotationY: 0,
+              opacity: 0,
+              scale: 0.5,
+            });
+
+            currentIndexRef.current = next;
+
+            timeoutId = setTimeout(runCycle, mediaDurationRef.current);
+          },
+        });
+
+        // ==========================================
+        // ÉTAPE 1 : L'ENTRÉE DU LOGO
+        // ==========================================
+        tl.to(
+          currentLayerRef.current,
+          { xPercent: 100, duration: 1.2, ease: "power2.inOut" },
+          "entree",
+        );
+        tl.to(
+          logoPanelRef.current,
+          { xPercent: 0, duration: 1.2, ease: "power2.inOut" },
+          "entree",
+        );
+
+        tl.to(
+          logoImgRef.current,
+          {
+            rotation: 360,
+            rotationY: 360,
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: "power2.out",
+          },
+          "entree+=0.2",
+        );
+
+        // ==========================================
+        // ÉTAPE 2 : LA PAUSE (1 seconde figée)
+        // ==========================================
+        tl.to({}, { duration: 1 });
+
+        // ==========================================
+        // ÉTAPE 3 : LA SORTIE DU LOGO
+        // ==========================================
+        tl.to(
+          logoPanelRef.current,
+          { xPercent: 100, duration: 1.2, ease: "power2.inOut" },
+          "sortie",
+        );
+        tl.to(
+          nextLayerRef.current,
+          { xPercent: 0, duration: 1.2, ease: "power2.inOut" },
+          "sortie",
+        );
+
+        tl.to(
+          logoImgRef.current,
+          {
+            rotation: 720,
+            rotationY: 720,
+            opacity: 0,
+            scale: 0.5,
+            duration: 1.2,
+            ease: "power2.in",
+          },
+          "sortie",
+        );
+      };
+
+      timeoutId = setTimeout(runCycle, mediaDurationRef.current);
+
+      return () => {
+        clearTimeout(timeoutId);
+        gsap.killTweensOf([
+          currentLayerRef.current,
+          nextLayerRef.current,
+          logoPanelRef.current,
+          logoImgRef.current,
+        ]);
+      };
+    },
+    { scope: containerRef, dependencies: [] },
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main
+      className="relative flex h-screen w-screen items-center justify-center bg-black overflow-hidden"
+      ref={containerRef}
+    >
+      <div className="absolute w-0 h-0 opacity-0 overflow-hidden pointer-events-none">
+        {mediaList.map((media) => (
+          <img
+            key={`preload-${media.id}`}
+            src={media.src}
+            alt=""
+            decoding="async"
+            loading="eager"
+          />
+        ))}
+      </div>
+
+      <div className="relative w-full max-w-[100vw] aspect-video bg-black overflow-hidden shadow-2xl">
+        <div
+          ref={nextLayerRef}
+          className="absolute inset-0 will-change-transform z-30"
+        >
+          <img
+            ref={nextImgRef}
+            src={mediaList[1].src}
+            alt="Slide suivante"
+            className="w-full h-full object-cover"
+            decoding="async"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div
+          ref={logoPanelRef}
+          className="absolute inset-0 flex items-center justify-center bg-black will-change-transform z-20"
+        >
+          <img
+            ref={logoImgRef}
+            src="/Logo _ Les Pétillantes_fonds clairs.svg"
+            alt="Logo"
+            className="w-80 h-80 object-contain will-change-transform"
+          />
         </div>
-      </main>
-    </div>
+
+        <div
+          ref={currentLayerRef}
+          className="absolute inset-0 will-change-transform z-10"
+        >
+          <img
+            ref={currentImgRef}
+            src={mediaList[0].src}
+            alt="Slide actuelle"
+            className="w-full h-full object-cover"
+            decoding="async"
+          />
+        </div>
+      </div>
+    </main>
   );
 }
