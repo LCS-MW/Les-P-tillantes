@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Affichage Dynamique Publicitaire - Les Pétillantes
 
-## Getting Started
+Ce projet est une application [Next.js](https://nextjs.org) créée avec [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) et optimisée pour l’affichage dynamique publicitaire sur écrans TV.
 
-First, run the development server:
+**Démo en ligne :** [Voir la démonstration](https://les-p-tillantes.vercel.app)
+
+---
+
+## Installation et lancement
+
+1. Assurez-vous d’avoir [Node.js](https://nodejs.org/) installé.
+2. Installez les dépendances :
+
+```bash
+npm install
+```
+
+3. Lancez le serveur de développement :
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Ouvrez `http://localhost:3000` dans votre navigateur.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Modifier les visuels publicitaires
 
-## Learn More
+La mise à jour des affiches est simple et ne nécessite pas de modifier la logique de l’application.
 
-To learn more about Next.js, take a look at the following resources:
+1. Ajoutez vos images (`.jpg`, `.png`, `.webp`, etc.) dans le dossier `public/` à la racine du projet.
+2. Ouvrez le fichier `app/data/mediaList.ts`.
+3. Remplacez les noms de fichiers par ceux de vos nouveaux visuels :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```ts
+export const mediaList = [
+  { id: 1, src: "/votre-nouvelle-affiche.jpg" },
+  { id: 2, src: "/promo-ete.webp" },
+  // ...
+];
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Le système accepte autant d’images que nécessaire. Enregistrez le fichier, et la page se mettra à jour automatiquement.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Configuration de la durée d’affichage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vous pouvez ajuster le temps d’affichage des affiches depuis une page d’administration cachée.
+
+1. Rendez-vous sur `http://localhost:3000/time`.
+2. Saisissez la durée souhaitée en secondes (par exemple : `15`).
+3. Cliquez sur **Sauvegarder**.
+4. Au prochain rechargement de la page principale (`/`), le nouveau temps sera pris en compte.
+
+> Note : l’animation du logo (entracte) inclut une pause de 1 seconde pour conserver un rythme dynamique. Pour modifier ce comportement, ajustez le paramètre `duration` dans `app/page.tsx`.
+
+---
+
+## Fonctionnement
+
+Pour garantir une expérience fluide sur des écrans TV souvent limités, ce lecteur utilise plusieurs optimisations :
+
+- **GSAP pour l’animation** : les transitions sont gérées avec GSAP pour un rendu fluide.
+- **Architecture en 3 calques** : l’application superpose trois panneaux (image actuelle, logo, nouvelle image) pour une transition douce.
+- **Préchargement agressif** : l’image suivante est chargée et décodée avant la transition pour éviter les sauts et les temps de latence.
+
+---
+
+## Ressources
+
+- [Documentation Next.js](https://nextjs.org/docs)
+- [Tutoriel Learn Next.js](https://nextjs.org/learn)
+
+```
+
+```
